@@ -1,0 +1,20 @@
+import { generateThumbnailSignedUrl, generateVideosSignedUrl } from "../controllers/videos/generatesigned.url";
+import { createVideo } from "../controllers/videos/add.video";
+import { getAllVideos, getVideoById } from "../controllers/videos/getall.video";
+import express from "express";
+// import { getSignedCookie } from "../controllers/videos/generatesigned.cookie";
+import { updateVideo } from "../controllers/videos/edit.video";
+import { verifyJWT } from "../middlewares/auth.middlewares";
+import { deleteVideo } from "../controllers/delete/video_delete.controller";
+
+const router = express.Router();
+router.use(verifyJWT);
+router.post("/", createVideo);
+router.get("/", getAllVideos);
+router.get("/:id", getVideoById);
+router.put("/:id/edit", updateVideo);
+router.delete("/:id", deleteVideo);
+router.route("/generate-video-signed-url").post(generateVideosSignedUrl);
+router.route("/generate-thumbnail-signed-url").post(generateThumbnailSignedUrl);
+// router.route("/get-signed-cookie").get(getSignedCookie);
+export default router;

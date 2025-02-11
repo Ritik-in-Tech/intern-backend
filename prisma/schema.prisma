@@ -1,0 +1,161 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  MANAGER
+  TRAINER
+}
+
+model Client {
+  id                     Int       @id @default(autoincrement())
+  email                  String    
+  name                   String
+  role                   Role      @default(MANAGER)
+  passwordDigest         String    @map("password_digest")
+  createdAt              DateTime  @default(now()) @map("created_at")
+  updatedAt              DateTime  @updatedAt @map("updated_at")
+  deleted_at             DateTime?  
+  passwordToken          String?   
+  passwordTokenExpires   DateTime?  
+  facilityId             Int       @map("facilityId")
+  facility               Facility  @relation(fields: [facilityId], references: [id])
+  @@unique([email, deleted_at]) 
+}
+
+model Admin {
+  id                     Int       @id @default(autoincrement())
+  email                  String    
+  name                   String
+  passwordDigest         String    @map("password_digest")
+  createdAt              DateTime  @default(now()) @map("created_at")
+  updatedAt              DateTime  @updatedAt @map("updated_at")
+  deleted_at             DateTime?  
+  passwordToken          String?   
+  passwordTokenExpires   DateTime?  
+  companies              Company[]
+  videos                 Video[]
+  @@unique([email, deleted_at]) 
+}
+
+
+model Company {
+  id       Int   @id @default(autoincrement())
+  name     String
+  location String
+  phoneNumber String
+  createdAt              DateTime                @default(now()) @map("created_at")
+  updatedAt              DateTime                @updatedAt @map("updated_at")
+  deleted_at             DateTime?       
+  adminId                Int                     @map("adminId") 
+  admin                Admin     @relation(fields: [adminId], references: [id])  
+  facilities           Facility[]   
+}
+
+model Facility {
+  id                     Int       @id @default(autoincrement())
+  name                   String
+  location               String
+  phoneNumber            String
+  companyId              Int       @map("companyId")
+  createdAt              DateTime  @default(now()) @map("created_at")
+  updatedAt              DateTime  @updatedAt @map("updated_at")
+  deleted_at             DateTime?  
+  company                Company     @relation(fields: [companyId], references: [id])
+  clients                Client[]
+  users                  User[]
+}
+
+
+model User {
+  id                     Int                     @id @default(autoincrement())
+  name                   String                  @map("name")
+  gender                 String                  @map("gender")
+  dateOfBirth            DateTime                @map("date_of_birth")
+  functionalLevel        String?                 @map("functionalLevel")
+  medicalHistory         String?                 @map("medicalHistory")
+  medicalRecordId        String?                 @map("medicalRecordId")
+  createdAt              DateTime                @default(now()) @map("created_at")
+  updatedAt              DateTime                @updatedAt @map("updated_at")
+  deleted_at             DateTime?                
+  physicalConditionForms PhysicalConditionForm[]
+  facilityId             Int?                    @map("facilityId")
+  facility               Facility?               @relation(fields: [facilityId], references: [id])
+}
+
+
+model Video {
+  id                     Int                     @id @default(autoincrement())
+  title                  String
+  description            String?
+  videoUrl               String                  @map("video_url")
+  thumbnailUrl           String                  @map("thumbnail_url")
+  fileKey                String
+  duration               Int?
+  adminId                Int                     @map("adminId")
+  createdAt              DateTime                @default(now()) @map("created_at")
+  updatedAt              DateTime                @updatedAt @map("updated_at")
+  deleted_at             DateTime?                
+  admin                  Admin                   @relation(fields: [adminId], references: [id])
+  viewingHistories       ViewingHistory[]
+  videoTagMappings       VideoTagMapping[]
+}
+
+
+model VideoTag {
+  id        Int      @id @default(autoincrement())
+  name      String
+  deletedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  mappings  VideoTagMapping[]
+}
+
+model VideoTagMapping {
+  video_id    Int
+  video_tag_id Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  video      Video    @relation(fields: [video_id], references: [id])
+  videoTag   VideoTag @relation(fields: [video_tag_id], references: [id])
+  @@id([video_id, video_tag_id])
+}
+
+model PhysicalConditionForm {
+  id                     Int       @id @default(autoincrement())
+  userId                 Int       @map("userId")
+  data                   Json
+  createdAt              DateTime  @default(now()) @map("created_at")
+  updatedAt              DateTime  @updatedAt @map("updated_at")
+  deleted_at             DateTime?  
+  user                   User      @relation(fields: [userId], references: [id])
+  trainingHistoryId      Int
+  trainingHistory        TrainingHistory @relation(fields: [trainingHistoryId], references: [id])
+}
+
+ 
+model ViewingHistory {
+  id                     Int       @id @default(autoincrement())
+  contentId              Int       @map("contentId")
+  createdAt              DateTime  @default(now()) @map("created_at")
+  updatedAt              DateTime  @updatedAt @map("updated_at")
+  deleted_at             DateTime?  
+  video                  Video     @relation(fields: [contentId], references: [id])
+  trainingHistoryId      Int
+  trainingHistory        TrainingHistory @relation(fields: [trainingHistoryId], references: [id])
+}
+
+
+model TrainingHistory {
+  id                     Int       @id @default(autoincrement())  
+  physicalConditionForms PhysicalConditionForm[]
+  viewingHistories       ViewingHistory[]
+  createdAt              DateTime  @default(now()) @map("created_at")
+  updatedAt              DateTime  @updatedAt @map("updated_at")
+  deleted_at             DateTime?  
+}
